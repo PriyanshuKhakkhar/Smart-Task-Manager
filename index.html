@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Smart_Task_Manager</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <h1 class="title">Smart-Task-Manager</h1>
+    
+    <div class="task-container">
+      <h3>Task Details</h3>
+      <label for="No"></label>
+      <input type="number" min="1" max="1000" placeholder="No" />
+      <input type="text" id="new" placeholder="Task Title" class="input" />
+      <br /><br />
+      <input type="text" placeholder="Descryption" class="Detail" />
+
+      <br /><br />
+      <button id="add-btn">Add</button>
+
+      <br /><br />
+
+      <label for="task">Priority:</label>
+
+      <select name="task">
+        <option value="First">Low</option>
+        <option value="Second">Medium</option>
+        <option value="Third">High</option>
+      </select>
+
+      <br /><br />
+
+      <label>Task Created Date</label>
+      <input type="date" />
+
+      <br /><br />
+
+      <label for="isCompleted">is Completed ?</label>
+      <select name="task">
+        <option value="True">True</option>
+        <option value="False">False</option>
+      </select>
+    </div>
+
+    <div class="container">
+        <header>
+            <h2>My Tasks</h2>
+        </header>
+    </div>
+    <script src="App.js"></script>
+</body>
+  </body>
+</html>
