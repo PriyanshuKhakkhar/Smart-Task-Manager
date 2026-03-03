@@ -1,7 +1,7 @@
 body {
     background-color: lightblue;
 }
-.title {
+.P-title {
     align-items: center;
     text-align: center;
     font-family: 'Times New Roman', Times, serif;
@@ -11,7 +11,7 @@ body {
     align-items: center;
 } */
 
-.task-container {
+.P-task-container {
   background: white;
   padding: 40px;
   width: 90%;          
@@ -21,7 +21,7 @@ body {
   margin: 40px auto;
 }
 
-.input {
+.P-input {
   width: 100%;
   padding: 12px;
   font-size: 16px;
@@ -29,7 +29,7 @@ body {
   border: 1px solid #ccc;
 }
 
-.Detail {
+.P-Detail {
     width: 100%;
     padding: 12px;
     font-size: 16px;
@@ -44,12 +44,24 @@ body {
   color: white;
   background-color: #3b82f6;
   border: none;
-  border-radius: 8px;
+  border-radius: 4px;
   cursor: pointer;
   transition: background-color 0.2s;
 }
+#delete-btn {
+  padding: 6px 10px;
+  font-size: 10px;
+  font-weight: 600;
+  color: white;
+  background-color: red;
+  border: none;
+  border-radius: 8px;
+}
+#P-add-btn:hover {
+  background-color: black;
+}
 
-.container {
+.P-container {
   background: white;
   padding: 5px;
   width: 90%;          
