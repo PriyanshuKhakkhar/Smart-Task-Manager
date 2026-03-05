@@ -6,53 +6,116 @@ const taskPriorityInput = document.getElementById("task-priority");
 const taskDateInput = document.getElementById("task-date");
 const taskStatusInput = document.getElementById("task-status");
 const taskList = document.getElementById("task-list");
+const searchInput = document.getElementById("search-task");
 
+let tasks = [];
+
+function loadTasks() {
+    const storedTasks = localStorage.getItem("tasks");
+    if (storedTasks) {
+        tasks = JSON.parse(storedTasks);
+    }
+}
+
+function saveTasks() {
+    localStorage.setItem("tasks", JSON.stringify(tasks));
+}
+
+function renderTasks(tasksToRender = tasks) {
+    taskList.innerHTML = "";
+
+    tasksToRender.forEach(task => {
+        const li = document.createElement("li");
+        li.className = "task-item";
+
+        li.innerHTML = `
+            <div class="task-header">
+                <strong>#${task.id} ${task.title}</strong>
+                <span class="priority ${task.priority.toLowerCase()}">
+                    ${task.priority}
+                </span>
+            </div>
+            <div class="task-body">
+                <p>${task.description}</p>
+            </div>
+            <div class="task-footer">
+                <small>Date: ${task.createdAt || "N/A"}</small>
+                <small>Status: ${task.isCompleted ? "Completed" : "Pending"}</small>
+                <br><br>
+                <button class="complete-btn" style="color:tomato;">Complete</button>
+                <button class="delete-btn" style="color:red;">Delete</button>
+            </div>
+        `;
+
+        // Delete Logic
+        li.querySelector(".delete-btn").addEventListener("click", () => {
+            tasks = tasks.filter(t => t.id !== task.id);
+            saveTasks();
+            renderTasks();
+        });
+
+        taskList.appendChild(li);
+
+        li.querySelector(".complete-btn").addEventListener("click", () => {
+            task.isCompleted = true;
+
+            saveTasks();
+            renderTasks();
+        });
+    });
+}
+
+function debounce(fn, delay) {
+    let timer;
+
+    return function () {
+        clearTimeout(timer);
+
+        timer = setTimeout(() => {
+            fn();
+        }, delay);
+    };
+}
+
+function searchTasks() {
+    const searchText = searchInput.value.toLowerCase();
+
+    const filteredTasks = tasks.filter(task =>
+        task.title.toLowerCase().includes(searchText)
+    );
+
+    renderTasks(filteredTasks);
+}
+
+// 6️⃣ Add Task Event
 addBtn.addEventListener("click", () => {
-    const taskId = taskIdInput.value;
-    const taskTitle = taskTitleInput.value;
-    const taskDesc = taskDescInput.value;
-    const taskPriority = taskPriorityInput.value;
-    const taskDate = taskDateInput.value;
-    const taskStatus = taskStatusInput.value;
 
-    if (!taskTitle.trim()) {
+    const id = Number(taskIdInput.value);
+    const title = taskTitleInput.value.trim();
+    const description = taskDescInput.value.trim();
+    const priority = taskPriorityInput.value;
+    const date = taskDateInput.value;
+    const status = taskStatusInput.value === "True";
+
+    if (!title) {
+        alert("Please enter Task Title");
         return;
     }
 
-    const li = document.createElement("li");
-    li.className = "task-item";
-    
-    li.innerHTML = `
-        <div class="task-header">
-            <strong>#${taskId} ${taskTitle}</strong>
-            <span class="priority ${taskPriority.toLowerCase()}">${taskPriority}</span>
-        </div>
-        <div class="task-body">
-            <p>${taskDesc}</p>
-        </div>
-        <div class="task-footer">
-            <small>Date: ${taskDate || 'N/A'}</small>
-            <small>Status: ${taskStatus === 'True' ? 'Completed' : 'Pending'}</small>
-            <button class="delete-item-btn" style="margin-left: auto; color: red; cursor: pointer;">Delete</button>
-        </div>
-    `;
+    const newTask = {
+        id: id,
+        title: title,
+        description: description,
+        priority: priority,
+        createdAt: date || new Date().toISOString(),
+        isCompleted: status
+    };
 
-    // Add functionality to the individual task delete button
-    const deleteItemBtn = li.querySelector(".delete-item-btn");
-    deleteItemBtn.addEventListener("click", () => {
-        li.remove();
-    });
+    tasks.push(newTask);
+    saveTasks();
+    renderTasks();
 
-    //Add functionalities to edit the task
-
-    const editItemBtn = li.querySelector(".edit-item-btn");
-    editItemBtn.addEventListener("click", function() {
-        li.edit;
-    })
-
-    taskList.appendChild(li);
-
-    // Clear inputs after adding
+    // Clear inputs
     taskIdInput.value = "";
     taskTitleInput.value = "";
     taskDescInput.value = "";
@@ -61,16 +124,9 @@ addBtn.addEventListener("click", () => {
     taskStatusInput.value = "False";
 });
 
-// Setup the global Delete button from index.html
-const globalDeleteBtn = document.getElementById("delete-btn");
-if (globalDeleteBtn) {
-    globalDeleteBtn.addEventListener("click", () => {
-        if (taskList.lastElementChild) {
-            taskList.removeChild(taskList.lastElementChild);
-        } else {
-            alert("No tasks to delete!");
-        }
-    });
-}
+loadTasks();
+renderTasks();
 
+const debouncedSearch = debounce(searchTasks, 300);
 
+searchInput.addEventListener("input", debouncedSearch);
