@@ -7,51 +7,82 @@
     <link rel="stylesheet" href="Src/style.css">
   </head>
   <body>
-    <h1 class="P-title">Smart-Task-Manager</h1>
+    <h1 class="page-title">Smart Task Manager</h1>
     
-    <div class="P-task-container">
-      <h3>Task Details</h3>
-      <label for="task-id">No:</label>
-      <input type="number" id="task-id" min="1" max="1000" placeholder="No" />
-      <input type="text" id="task-title" placeholder="Task Title" class="P-input" />
-      <br /><br />
-      <input type="text" id="task-desc" placeholder="Description" class="P-Detail" />
-
-      <br /><br />
-      <button id="add-btn">Add</button>
-
-      <br /><br />
-
-      <label for="task-priority">Priority:</label>
-
-      <select id="task-priority" name="priority">
-        <option value="Low">Low</option>
-        <option value="Medium">Medium</option>
-        <option value="High">High</option>
-      </select>
-
-      <br /><br />
-
-      <label>Task Created Date</label>
-      <input type="date" id="task-date" />
-
-      <br/><br />
-
-      <label for="task-status">is Completed ?</label>
-      <select id="task-status" name="status">
-        <option value="True">True</option>
-        <option value="False">False</option>
-      </select>
+    <div class="form-card">
+      <h2 class="form-section-title">Task Details</h2>
+      
+      <div class="form-row form-row-2col">
+        <div class="form-group">
+          <label for="task-title" class="form-label">Task Title <span class="required-star">*</span></label>
+          <input type="text" id="task-title" placeholder="Enter task title" class="form-control" />
+          <div id="title-error" class="error-msg d-none">Task Title is required.</div>
+        </div>
+        
+        <div class="form-group">
+          <label for="task-priority" class="form-label">Priority <span class="required-star">*</span></label>
+          <select id="task-priority" class="form-control form-select">
+            <option value="">Select Priority</option>
+            <option value="Low">Low</option>
+            <option value="Medium">Medium</option>
+            <option value="High">High</option>
+          </select>
+          <div id="priority-error" class="error-msg d-none">Priority is required.</div>
+        </div>
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label for="task-desc" class="form-label">Description</label>
+          <textarea id="task-desc" placeholder="Enter task description" class="form-control form-textarea"></textarea>
+        </div>
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Is Completed? <span class="required-star">*</span></label>
+          <div class="radio-group">
+            <label class="radio-label">
+              <input type="radio" id="pending" name="task-status" value="false">
+              Pending
+            </label>
+            <label class="radio-label">
+              <input type="radio" id="completed" name="task-status" value="true">
+              Completed
+            </label>
+          </div>
+          <div id="status-error" class="error-msg d-none">Completion status is required.</div>
+        </div>
+      </div>
+      
+      <div class="form-actions">
+        <button id="add-btn" class="btn-primary">Add Task</button>
+        <button id="clear-btn" type="button" class="btn-secondary">Clear</button>
+      </div>
     </div>
 
     <div class="P-container">
-        <header>
+        <header class="tasks-header">
             <h2>My Tasks</h2>
+            <input type="text" id="search-task" placeholder="Search task...">
         </header>
-        <ul id="task-list"></ul>
+        <div class="table-container">
+            <table class="task-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Title</th>
+                        <th>Description</th>
+                        <th>Priority</th>
+                        <th>Status</th>
+                        <th>Created At</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="task-list"></tbody>
+            </table>
+        </div>
         
-        <label for="search-task">Search:</label>
-        <input type="text" id="search-task" placeholder="Search task...">
 
         <!-- <button id="delete-btn">Delete</button>
         <button id="edit-btn">Edit</button> -->
