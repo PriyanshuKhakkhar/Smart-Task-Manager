@@ -8,8 +8,25 @@ const TaskManager = (function() {
     const taskList = document.getElementById("task-list");
     const searchInput = document.getElementById("search-task");
 
+    // Subtask form elements
+    const subtaskFormContainer = document.getElementById("subtask-form-container");
+    const parentTaskInfo = document.getElementById("parent-task-info");
+    const subtaskTitleInput = document.getElementById("subtask-title");
+    const subtaskDescInput = document.getElementById("subtask-desc");
+    const subtaskPriorityInput = document.getElementById("subtask-priority");
+    const subtaskPendingRadio = document.getElementById("subtask-pending");
+    const subtaskCompletedRadio = document.getElementById("subtask-completed");
+    const addSubtaskBtn = document.getElementById("add-subtask-btn");
+    const clearSubtaskBtn = document.getElementById("clear-subtask-btn");
+    const cancelSubtaskBtn = document.getElementById("cancel-subtask-btn");
+
+    const subtaskTitleError = document.getElementById("subtask-title-error");
+    const subtaskPriorityError = document.getElementById("subtask-priority-error");
+    const subtaskStatusError = document.getElementById("subtask-status-error");
+
     let tasks = [];
     let taskIdCounter = 1;
+    let currentParentTaskId = null;
 
     // 1. Task Constructor
     function Task(id, title, description, priority, createdAt, isCompleted, subtasks) {
@@ -112,6 +129,17 @@ const TaskManager = (function() {
         return false;
     }
 
+    function findTaskById(taskListRef, taskId) {
+        for (let i = 0; i < taskListRef.length; i++) {
+            if (taskListRef[i].id === taskId) return taskListRef[i];
+            if (taskListRef[i].subtasks && taskListRef[i].subtasks.length > 0) {
+                const found = findTaskById(taskListRef[i].subtasks, taskId);
+                if (found) return found;
+            }
+        }
+        return null;
+    }
+
     function renderTasks(tasksToRender = tasks) {
         if (!taskList) return;
         taskList.innerHTML = "";
@@ -133,9 +161,9 @@ const TaskManager = (function() {
                 <td><span class="badge status-${task.isCompleted ? 'completed' : 'pending'}">${task.isCompleted ? "Completed" : "Pending"}</span></td>
                 <td style="color: #6b7280;">${task.createdAt || "N/A"}</td>
                 <td class="action-buttons">
-                    <button class="btn-complete">Completed</button>
-                    <button class="btn-subtask">Subtask</button>
-                    <button class="btn-delete">Delete</button>
+                    <button class="btn btn-complete">Completed</button>
+                    <button class="btn btn-subtask">Subtask</button>
+                    <button class="btn btn-delete">Delete</button>
                 </td>
             `;
 
@@ -156,25 +184,14 @@ const TaskManager = (function() {
 
             tr.querySelector(".btn-subtask").addEventListener("click", (e) => {
                 e.stopPropagation();
-                const subTaskTitle = prompt("Enter subtask title");
-                if (!subTaskTitle) return;
-
-                const priority = task.priority || "Low";
-                const createdAt = new Date().toLocaleString();
-                
-                // Use constructor for subtasks
-                let newSubtask;
-                if (priority === "High") {
-                    newSubtask = new ImportantTask(generateId(), subTaskTitle, "", priority, createdAt, false, []);
-                } else {
-                    newSubtask = new Task(generateId(), subTaskTitle, "", priority, createdAt, false, []);
+                currentParentTaskId = task.id;
+                if (parentTaskInfo) {
+                    parentTaskInfo.textContent = `#${task.id} - ${task.title}`;
                 }
-
-                if (!task.subtasks) task.subtasks = [];
-                task.subtasks.push(newSubtask);
-
-                saveTasks();
-                renderTasks();
+                if (subtaskFormContainer) {
+                    subtaskFormContainer.classList.remove("d-none");
+                    subtaskFormContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
             });
 
             parentElement.appendChild(tr);
@@ -285,6 +302,87 @@ const TaskManager = (function() {
         });
     }
 
+    // Add Subtask Event
+    if (addSubtaskBtn) {
+        addSubtaskBtn.addEventListener("click", () => {
+            if (!currentParentTaskId) return;
+
+            const title = subtaskTitleInput ? subtaskTitleInput.value.trim() : "";
+            const description = subtaskDescInput ? subtaskDescInput.value.trim() : "";
+            const priority = subtaskPriorityInput ? subtaskPriorityInput.value : "";
+            
+            let isValid = true;
+
+            if (!title) {
+                if (subtaskTitleError) subtaskTitleError.classList.remove("d-none");
+                isValid = false;
+            } else {
+                if (subtaskTitleError) subtaskTitleError.classList.add("d-none");
+            }
+
+            if (!priority) {
+                if (subtaskPriorityError) subtaskPriorityError.classList.remove("d-none");
+                isValid = false;
+            } else {
+                if (subtaskPriorityError) subtaskPriorityError.classList.add("d-none");
+            }
+
+            const selectedStatus = document.querySelector('input[name="subtask-status"]:checked');
+            if (!selectedStatus) {
+                if (subtaskStatusError) subtaskStatusError.classList.remove("d-none");
+                isValid = false;
+            } else {
+                if (subtaskStatusError) subtaskStatusError.classList.add("d-none");
+            }
+
+            if (!isValid) return;
+
+            const status = selectedStatus.value === "true";
+            const createdAt = new Date().toLocaleString();
+
+            let newSubtask;
+            if (priority === "High") {
+                newSubtask = new ImportantTask(generateId(), title, description, priority, createdAt, status, []);
+            } else {
+                newSubtask = new Task(generateId(), title, description, priority, createdAt, status, []);
+            }
+
+            const parentTask = findTaskById(tasks, currentParentTaskId);
+            if (parentTask) {
+                if (!parentTask.subtasks) parentTask.subtasks = [];
+                parentTask.subtasks.push(newSubtask);
+                saveTasks();
+                renderTasks();
+            }
+
+            clearSubtaskForm();
+            if (subtaskFormContainer) subtaskFormContainer.classList.add("d-none");
+            currentParentTaskId = null;
+        });
+    }
+
+    function clearSubtaskForm() {
+        if (subtaskTitleInput) subtaskTitleInput.value = "";
+        if (subtaskDescInput) subtaskDescInput.value = "";
+        if (subtaskPriorityInput) subtaskPriorityInput.value = "";
+        
+        if (subtaskPendingRadio) subtaskPendingRadio.checked = false;
+        if (subtaskCompletedRadio) subtaskCompletedRadio.checked = false;
+
+        if (subtaskTitleError) subtaskTitleError.classList.add("d-none");
+        if (subtaskPriorityError) subtaskPriorityError.classList.add("d-none");
+        if (subtaskStatusError) subtaskStatusError.classList.add("d-none");
+    }
+
+    if (clearSubtaskBtn) clearSubtaskBtn.addEventListener("click", clearSubtaskForm);
+    if (cancelSubtaskBtn) {
+        cancelSubtaskBtn.addEventListener("click", () => {
+            clearSubtaskForm();
+            if (subtaskFormContainer) subtaskFormContainer.classList.add("d-none");
+            currentParentTaskId = null;
+        });
+    }
+
     // Input Validation Correcting Event Listeners
     if (taskTitleInput) {
         taskTitleInput.addEventListener("input", () => {
@@ -309,6 +407,29 @@ const TaskManager = (function() {
         radio.addEventListener("change", () => {
             const statusError = document.getElementById("status-error");
             if (statusError) statusError.classList.add("d-none");
+        });
+    });
+
+    if (subtaskTitleInput) {
+        subtaskTitleInput.addEventListener("input", () => {
+            if (subtaskTitleError && subtaskTitleInput.value.trim() !== "") {
+                subtaskTitleError.classList.add("d-none");
+            }
+        });
+    }
+    
+    if (subtaskPriorityInput) {
+        subtaskPriorityInput.addEventListener("change", () => {
+            if (subtaskPriorityError && subtaskPriorityInput.value !== "") {
+                subtaskPriorityError.classList.add("d-none");
+            }
+        });
+    }
+    
+    const subtaskRadioInputs = document.querySelectorAll('input[name="subtask-status"]');
+    subtaskRadioInputs.forEach(radio => {
+        radio.addEventListener("change", () => {
+            if (subtaskStatusError) subtaskStatusError.classList.add("d-none");
         });
     });
 

@@ -135,7 +135,7 @@ body {
   display: none !important;
 }
 
-#add-btn.btn-primary {
+#add-btn.btn-primary, #add-subtask-btn.btn-primary {
   padding: 10px 24px;
   font-size: 14px;
   font-weight: 600;
@@ -147,11 +147,11 @@ body {
   transition: background-color 0.2s;
 }
 
-#add-btn.btn-primary:hover {
+#add-btn.btn-primary:hover, #add-subtask-btn.btn-primary:hover {
   background-color: #1e1b4b;
 }
 
-#clear-btn.btn-secondary {
+#clear-btn.btn-secondary, #clear-subtask-btn.btn-secondary {
   padding: 10px 24px;
   font-size: 14px;
   font-weight: 600;
@@ -163,7 +163,7 @@ body {
   transition: background-color 0.2s;
 }
 
-#clear-btn.btn-secondary:hover {
+#clear-btn.btn-secondary:hover, #clear-subtask-btn.btn-secondary:hover {
   background-color: #4b5563;
 }
 
@@ -213,22 +213,25 @@ body {
   font-size: 14px;
 }
 .task-table thead tr {
-  background-color: #f9fafb;
-  border-top: 1px solid #f3f4f6;
-  border-bottom: 1px solid #e5e7eb;
+  background-color: #f9fafb !important;
+  border-top: 1px solid #f3f4f6 !important;
+  border-bottom: 1px solid #e5e7eb !important;
 }
 .task-table th {
-  padding: 16px;
-  font-size: 11px;
+  padding: 16px !important;
+  font-size: 11px !important;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #6b7280;
+  color: #6b7280 !important;
   font-weight: 700;
+  border-bottom: 1px solid #e5e7eb !important;
+  background-color: #f9fafb !important;
 }
 .task-table td {
-  padding: 16px;
-  border-bottom: 1px solid #f3f4f6;
-  vertical-align: middle;
+  padding: 16px !important;
+  border-bottom: 1px solid #f3f4f6 !important;
+  vertical-align: middle !important;
+  background-color: white !important;
 }
 
 /* Badges */
