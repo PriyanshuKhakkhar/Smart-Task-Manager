@@ -8,40 +8,23 @@ const TaskManager = (function() {
     const taskList = document.getElementById("task-list");
     const searchInput = document.getElementById("search-task");
 
-    // Subtask form elements
-    const subtaskFormContainer = document.getElementById("subtask-form-container");
-    const parentTaskInfo = document.getElementById("parent-task-info");
-    const subtaskTitleInput = document.getElementById("subtask-title");
-    const subtaskDescInput = document.getElementById("subtask-desc");
-    const subtaskPriorityInput = document.getElementById("subtask-priority");
-    const subtaskPendingRadio = document.getElementById("subtask-pending");
-    const subtaskCompletedRadio = document.getElementById("subtask-completed");
-    const addSubtaskBtn = document.getElementById("add-subtask-btn");
-    const clearSubtaskBtn = document.getElementById("clear-subtask-btn");
-    const cancelSubtaskBtn = document.getElementById("cancel-subtask-btn");
-
-    const subtaskTitleError = document.getElementById("subtask-title-error");
-    const subtaskPriorityError = document.getElementById("subtask-priority-error");
-    const subtaskStatusError = document.getElementById("subtask-status-error");
-
     let tasks = [];
     let taskIdCounter = 1;
-    let currentParentTaskId = null;
+    let TASK_API_URL = "https://dummyjson.com/todos?limit=5";
 
     // 1. Task Constructor
-    function Task(id, title, description, priority, createdAt, isCompleted, subtasks) {
+    function Task(id, title, description, priority, createdAt, isCompleted) {
         this.id = id;
         this.title = title;
         this.description = description;
         this.priority = priority;
         this.createdAt = createdAt;
         this.isCompleted = isCompleted || false;
-        this.subtasks = subtasks || [];
     }
 
     // 2. ImportantTask Constructor (Prototype Inheritance)
-    function ImportantTask(id, title, description, priority, createdAt, isCompleted, subtasks) {
-        Task.call(this, id, title, description, priority, createdAt, isCompleted, subtasks);
+    function ImportantTask(id, title, description, priority, createdAt, isCompleted) {
+        Task.call(this, id, title, description, priority, createdAt, isCompleted);
         this.important = true;
     }
     ImportantTask.prototype = Object.create(Task.prototype);
@@ -51,19 +34,62 @@ const TaskManager = (function() {
         return taskIdCounter++;
     }
 
-    // Helper to recursively restore loaded objects into true class instances
+    // Helper to restore loaded objects into true class instances
     function instantiateTask(taskData) {
-        let subtasks = [];
-        if (taskData.subtasks && taskData.subtasks.length > 0) {
-            subtasks = taskData.subtasks.map(instantiateTask);
-        }
-        
         if (taskData.priority === "High" || taskData.important) {
-            return new ImportantTask(taskData.id, taskData.title, taskData.description, taskData.priority, taskData.createdAt, taskData.isCompleted, subtasks);
+            return new ImportantTask(taskData.id, taskData.title, taskData.description, taskData.priority, taskData.createdAt, taskData.isCompleted);
         } else {
-            return new Task(taskData.id, taskData.title, taskData.description, taskData.priority, taskData.createdAt, taskData.isCompleted, subtasks);
+            return new Task(taskData.id, taskData.title, taskData.description, taskData.priority, taskData.createdAt, taskData.isCompleted);
         }
     }
+    function mapApiTaskToAppTask(apiTask) {
+        const priorityOptions = ["Low", "Medium", "High"];
+        const randomPriority = priorityOptions[Math.floor(Math.random() * priorityOptions.length)];
+        const createdAt = new Date().toLocaleString();
+
+        if(randomPriority === "High") {
+            return new ImportantTask(
+                generateId(),
+                apiTask.todo,
+                "Fetched from API",
+                randomPriority,
+                createdAt,
+                apiTask.completed
+            );
+        }
+        return new Task(
+            generateId(),
+            apiTask.todo,
+            "Fetched from API",
+            randomPriority,
+            createdAt,
+            apiTask.completed
+        )
+    }
+
+    // CORS (Cross-Origin Resource Sharing)
+    // Browsers block requests to APIs from different origins unless the server allows it.
+    // Our frontend runs on localhost, but the API is on dummyjson.com.
+    // The dummyjson API allows cross-origin requests using CORS headers,
+    // so our fetch request works correctly.
+    
+    function fetchTasksFromAPI() {
+        return fetch(TASK_API_URL)
+        .then((response) => {
+            if(!response.ok) {
+                throw new Error("Failed to fetch tasks from API");
+            }
+            return response.json();
+        })
+        
+        .then((data) => {
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    resolve(data.todos.map(mapApiTaskToAppTask));
+                }, 2000);
+            });
+        });
+}
 
     function loadTasks() {
         const storedTasks = localStorage.getItem("tasks");
@@ -72,14 +98,9 @@ const TaskManager = (function() {
             tasks = parsedTasks.map(instantiateTask);
             
             let maxId = 0;
-            function findMaxId(currentTasks) {
-                if (!currentTasks) return;
-                currentTasks.forEach(task => {
-                    if (task.id > maxId) maxId = task.id;
-                    if (task.subtasks && task.subtasks.length > 0) findMaxId(task.subtasks);
-                });
-            }
-            findMaxId(tasks);
+            tasks.forEach(task => {
+                if (task.id > maxId) maxId = task.id;
+            });
             taskIdCounter = maxId + 1;
         }
     }
@@ -114,48 +135,29 @@ const TaskManager = (function() {
         if (statusError) statusError.classList.add("d-none");
     }
 
-    function deleteTaskRecursively(taskListRef, taskId) {
+    function deleteTask(taskListRef, taskId) {
         for (let i = 0; i < taskListRef.length; i++) {
             if (taskListRef[i].id === taskId) {
                 taskListRef.splice(i, 1);
                 return true;
             }
-            if (taskListRef[i].subtasks && taskListRef[i].subtasks.length > 0) {
-                if (deleteTaskRecursively(taskListRef[i].subtasks, taskId)) {
-                    return true;
-                }
-            }
         }
         return false;
-    }
-
-    function findTaskById(taskListRef, taskId) {
-        for (let i = 0; i < taskListRef.length; i++) {
-            if (taskListRef[i].id === taskId) return taskListRef[i];
-            if (taskListRef[i].subtasks && taskListRef[i].subtasks.length > 0) {
-                const found = findTaskById(taskListRef[i].subtasks, taskId);
-                if (found) return found;
-            }
-        }
-        return null;
     }
 
     function renderTasks(tasksToRender = tasks) {
         if (!taskList) return;
         taskList.innerHTML = "";
 
-        function renderTaskRecursively(task, parentElement, depth = 0) {
+        tasksToRender.forEach(task => {
             const tr = document.createElement("tr");
             tr.className = "task-item";
-
-            const indent = depth * 20;
-            const indentHtml = depth > 0 ? `<span style="display:inline-block; width:${indent}px"></span>&#8627; ` : '';
 
             const titleStyle = task.isCompleted ? 'text-decoration: line-through; color: #9ca3af;' : 'color: #374151; font-weight: 500;';
             
             tr.innerHTML = `
                 <td style="font-weight: 600; color: #4b5563;">#${task.id}</td>
-                <td style="${titleStyle}">${indentHtml}${task.title}</td>
+                <td style="${titleStyle}">${task.title}</td>
                 <td style="color: #6b7280;">${task.description || '-'}</td>
                 <td><span class="badge priority-${task.priority ? task.priority.toLowerCase() : 'low'}">${task.priority || 'Low'}</span></td>
                 <td><span class="badge status-${task.isCompleted ? 'completed' : 'pending'}">${task.isCompleted ? "Completed" : "Pending"}</span></td>
@@ -170,7 +172,7 @@ const TaskManager = (function() {
             // Actions
             tr.querySelector(".btn-delete").addEventListener("click", (e) => {
                 e.stopPropagation();
-                deleteTaskRecursively(tasks, task.id);
+                deleteTask(tasks, task.id);
                 saveTasks();
                 renderTasks();
             });
@@ -182,30 +184,7 @@ const TaskManager = (function() {
                 renderTasks();
             });
 
-            tr.querySelector(".btn-subtask").addEventListener("click", (e) => {
-                e.stopPropagation();
-                currentParentTaskId = task.id;
-                if (parentTaskInfo) {
-                    parentTaskInfo.textContent = `#${task.id} - ${task.title}`;
-                }
-                if (subtaskFormContainer) {
-                    subtaskFormContainer.classList.remove("d-none");
-                    subtaskFormContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }
-            });
-
-            parentElement.appendChild(tr);
-
-            // Render Subtasks
-            if (task.subtasks && task.subtasks.length > 0) {
-                task.subtasks.forEach(subtask => {
-                    renderTaskRecursively(subtask, parentElement, depth + 1);
-                });
-            }
-        }
-
-        tasksToRender.forEach(task => {
-            renderTaskRecursively(task, taskList, 0);
+            taskList.appendChild(tr);
         });
     }
 
@@ -288,9 +267,9 @@ const TaskManager = (function() {
             // Use constructors instead of literal generic objects
             let newTask;
             if (priority === "High") {
-                newTask = new ImportantTask(generateId(), title, description, priority, createdAt, status, []);
+                newTask = new ImportantTask(generateId(), title, description, priority, createdAt, status);
             } else {
-                newTask = new Task(generateId(), title, description, priority, createdAt, status, []);
+                newTask = new Task(generateId(), title, description, priority, createdAt, status);
             }
 
             tasks.push(newTask);
@@ -299,87 +278,6 @@ const TaskManager = (function() {
 
             // Clear inputs and validation visually
             clearForm();
-        });
-    }
-
-    // Add Subtask Event
-    if (addSubtaskBtn) {
-        addSubtaskBtn.addEventListener("click", () => {
-            if (!currentParentTaskId) return;
-
-            const title = subtaskTitleInput ? subtaskTitleInput.value.trim() : "";
-            const description = subtaskDescInput ? subtaskDescInput.value.trim() : "";
-            const priority = subtaskPriorityInput ? subtaskPriorityInput.value : "";
-            
-            let isValid = true;
-
-            if (!title) {
-                if (subtaskTitleError) subtaskTitleError.classList.remove("d-none");
-                isValid = false;
-            } else {
-                if (subtaskTitleError) subtaskTitleError.classList.add("d-none");
-            }
-
-            if (!priority) {
-                if (subtaskPriorityError) subtaskPriorityError.classList.remove("d-none");
-                isValid = false;
-            } else {
-                if (subtaskPriorityError) subtaskPriorityError.classList.add("d-none");
-            }
-
-            const selectedStatus = document.querySelector('input[name="subtask-status"]:checked');
-            if (!selectedStatus) {
-                if (subtaskStatusError) subtaskStatusError.classList.remove("d-none");
-                isValid = false;
-            } else {
-                if (subtaskStatusError) subtaskStatusError.classList.add("d-none");
-            }
-
-            if (!isValid) return;
-
-            const status = selectedStatus.value === "true";
-            const createdAt = new Date().toLocaleString();
-
-            let newSubtask;
-            if (priority === "High") {
-                newSubtask = new ImportantTask(generateId(), title, description, priority, createdAt, status, []);
-            } else {
-                newSubtask = new Task(generateId(), title, description, priority, createdAt, status, []);
-            }
-
-            const parentTask = findTaskById(tasks, currentParentTaskId);
-            if (parentTask) {
-                if (!parentTask.subtasks) parentTask.subtasks = [];
-                parentTask.subtasks.push(newSubtask);
-                saveTasks();
-                renderTasks();
-            }
-
-            clearSubtaskForm();
-            if (subtaskFormContainer) subtaskFormContainer.classList.add("d-none");
-            currentParentTaskId = null;
-        });
-    }
-
-    function clearSubtaskForm() {
-        if (subtaskTitleInput) subtaskTitleInput.value = "";
-        if (subtaskDescInput) subtaskDescInput.value = "";
-        if (subtaskPriorityInput) subtaskPriorityInput.value = "";
-        
-        if (subtaskPendingRadio) subtaskPendingRadio.checked = false;
-        if (subtaskCompletedRadio) subtaskCompletedRadio.checked = false;
-
-        if (subtaskTitleError) subtaskTitleError.classList.add("d-none");
-        if (subtaskPriorityError) subtaskPriorityError.classList.add("d-none");
-        if (subtaskStatusError) subtaskStatusError.classList.add("d-none");
-    }
-
-    if (clearSubtaskBtn) clearSubtaskBtn.addEventListener("click", clearSubtaskForm);
-    if (cancelSubtaskBtn) {
-        cancelSubtaskBtn.addEventListener("click", () => {
-            clearSubtaskForm();
-            if (subtaskFormContainer) subtaskFormContainer.classList.add("d-none");
-            currentParentTaskId = null;
         });
     }
 
@@ -410,29 +308,6 @@ const TaskManager = (function() {
         });
     });
 
-    if (subtaskTitleInput) {
-        subtaskTitleInput.addEventListener("input", () => {
-            if (subtaskTitleError && subtaskTitleInput.value.trim() !== "") {
-                subtaskTitleError.classList.add("d-none");
-            }
-        });
-    }
-    
-    if (subtaskPriorityInput) {
-        subtaskPriorityInput.addEventListener("change", () => {
-            if (subtaskPriorityError && subtaskPriorityInput.value !== "") {
-                subtaskPriorityError.classList.add("d-none");
-            }
-        });
-    }
-    
-    const subtaskRadioInputs = document.querySelectorAll('input[name="subtask-status"]');
-    subtaskRadioInputs.forEach(radio => {
-        radio.addEventListener("change", () => {
-            if (subtaskStatusError) subtaskStatusError.classList.add("d-none");
-        });
-    });
-
     if (clearbtn) clearbtn.addEventListener("click", clearForm);
     if (searchInput) searchInput.addEventListener("input", debounce(searchTasks, 300));
     if (taskList) {
@@ -444,6 +319,28 @@ const TaskManager = (function() {
     // Initialization
     loadTasks();
     renderTasks();
+
+    if(tasks.length === 0) {
+        const loadingMessage = document.getElementById("loading-message");
+        const errorMessage = document.getElementById("error-message");
+
+        if(errorMessage) errorMessage.classList.add("d-none");
+        if (loadingMessage) loadingMessage.classList.remove("d-none");
+        
+        fetchTasksFromAPI()
+            .then((apiTasks) => {
+                tasks = apiTasks;
+                saveTasks();
+                renderTasks();
+                if (loadingMessage) loadingMessage.classList.add("d-none");
+                if(errorMessage) errorMessage.classList.add("d-none");
+            })
+            .catch((error) => {
+                console.log("API fetch Error:", error.message);
+                if (loadingMessage) loadingMessage.classList.add("d-none");
+                if (errorMessage) errorMessage.classList.remove("d-none");
+            });
+    }
 
     // Return the module API (empty strictly just invoking)
     return {
