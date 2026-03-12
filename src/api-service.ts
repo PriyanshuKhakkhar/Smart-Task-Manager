@@ -43,20 +43,27 @@ export function mapApiTaskToAppTask(apiTask: IApiTodo): ITask {
     )
 }
 
-export function fetchTasksFromAPI(): Promise<ITask[]> {
-    return fetch("https://dummyjson.com/todos?limit=5")
-    .then((response) => {
-        if(!response.ok) {
+// Replace Promise chains with try/catch and async/await
+export async function fetchTasksFromAPI(): Promise<ITask[]> {
+    try {
+        const response = await fetch("https://dummyjson.com/todos?limit=5");
+        
+        if (!response.ok) {
             throw new Error("Failed to fetch tasks from API");
         }
-        return response.json();
-    })
-    .then((data: unknown) => {
-        const apiData = data as IApiResponse;
-        return new Promise<ITask[]>((resolve) => {
+        
+        // Wait for JSON parsing using await and strictly type response data
+        const apiData: IApiResponse = await response.json();
+        
+        // Maintain existing 2-second timeout for loading simulation
+        return await new Promise<ITask[]>((resolve) => {
             setTimeout(() => {
                 resolve(apiData.todos.map(mapApiTaskToAppTask));
             }, 2000);
         });
-    });
+    } catch (error) {
+        // Forward error cleanly when there is a network/fetch issue
+        console.error("Error fetching tasks:", error);
+        throw error;
+    }
 }

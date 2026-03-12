@@ -2,8 +2,7 @@ import type { ITask, ISubTask } from "./task-model.js";
 import { tasks, removeTaskById, toggleTaskCompletion } from "./task-service.js";
 import { saveTasks } from "./storage-service.js";
 import { openSubtaskModal } from "./App.js";
-
-const taskList = document.getElementById("task-list") as HTMLInputElement | null;
+import { DOM } from "./dom-elements.js";
 
 // Recursive helper to render nested subtasks
 export function renderSubtasksHtml(subtasks: ISubTask[], depth: number = 0): string {
@@ -138,19 +137,19 @@ function attachSubtaskRowEvents(subTr: HTMLTableRowElement): void {
 }
 
 export function renderTasks(tasksToRender: ITask[] = tasks): void {
-    if (!taskList) return;
-    taskList.innerHTML = "";
+    if (!DOM.taskList) return;
+    DOM.taskList.innerHTML = "";
 
     tasksToRender.forEach(task => {
         const tr = createTaskRow(task);
         attachTaskRowEvents(tr, task);
-        taskList.appendChild(tr);
+        DOM.taskList?.appendChild(tr);
 
         // Render subtasks if any
         if (task.subtasks && task.subtasks.length > 0) {
             const subTr = createSubtasksRow(task.subtasks);
             attachSubtaskRowEvents(subTr);
-            taskList.appendChild(subTr);
+            DOM.taskList?.appendChild(subTr);
         }
     });
 }

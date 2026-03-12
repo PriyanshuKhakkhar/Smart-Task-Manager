@@ -3,6 +3,21 @@ import { type ITask, type ISubTask, Task, ImportantTask, type TaskConstructor } 
 const TaskFactory = Task as unknown as TaskConstructor;
 const ImportantTaskFactory = ImportantTask as unknown as TaskConstructor;
 
+// --- Mixin Setup ---
+type Constructor = new (...args: any[]) => {};
+
+export function LoggingMixin<TBase extends Constructor>(Base: TBase) {
+    return class extends Base {
+        log(message: string) {
+            console.log("[TaskManager Log]:", message);
+        }
+    };
+}
+
+class BaseLogger {}
+export class TaskLogger extends LoggingMixin(BaseLogger) {}
+export const logger = new TaskLogger();
+
 export let tasks: ITask[] = [];
 export let taskIdCounter = 1;
 
@@ -27,6 +42,7 @@ export function addTask(title: string, description: string, priority: string, cr
         newTask = new TaskFactory(id, title, description, priority, createdAt, isCompleted);
     }
     tasks.push(newTask);
+    logger.log(`Task added: "${title}" (ID: ${id})`);
 }
 
 // Recursive helper to find any node by ID
@@ -59,6 +75,7 @@ export function addSubtask(parentId: number, title: string, description: string,
             createdAt,
             subtasks: []
         });
+        logger.log(`Subtask added: "${title}" (Parent ID: ${parentId})`);
     }
 }
 
@@ -78,7 +95,11 @@ export function deleteNodeById(nodes: (ITask | ISubTask)[], id: number): boolean
 }
 
 export function removeTaskById(id: number): boolean {
-    return deleteNodeById(tasks, id);
+    const isDeleted = deleteNodeById(tasks, id);
+    if (isDeleted) {
+        logger.log(`Task or subtask deleted (ID: ${id})`);
+    }
+    return isDeleted;
 }
 
 // Toggle completed recursively
@@ -92,4 +113,13 @@ export function toggleTaskCompletion(id: number, isCompleted: boolean): void {
 export function searchTasks(searchText: string): ITask[] {
     const text = searchText.toLowerCase();
     return tasks.filter(task => task.title.toLowerCase().includes(text));
+}
+
+// Reusable generic sorting function
+export function sortBy<T, K extends keyof T>(items: T[], key: K): T[] {
+    return [...items].sort((a, b) => {
+        if (a[key] < b[key]) return -1;
+        if (a[key] > b[key]) return 1;
+        return 0;
+    });
 }
