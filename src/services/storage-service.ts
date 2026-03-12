@@ -1,4 +1,4 @@
-import { type ITask, type ISubTask, Task, ImportantTask, type TaskConstructor } from "./task-model.js";
+import { type ITask, type ISubTask, Task, ImportantTask, type TaskConstructor } from "../models/task-model.js";
 import { generateId, tasks, setTasks, setTaskIdCounter } from "./task-service.js";
 
 const TaskFactory = Task as unknown as TaskConstructor;

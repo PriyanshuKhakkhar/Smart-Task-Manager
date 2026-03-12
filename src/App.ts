@@ -1,9 +1,9 @@
-import type { ITask } from "./task-model.js";
-import { tasks, addTask, addSubtask, searchTasks, setTasks } from "./task-service.js";
-import { loadTasks, saveTasks } from "./storage-service.js";
-import { fetchTasksFromAPI } from "./api-service.js";
-import { renderTasks } from "./ui-render.js";
-import { DOM } from "./dom-elements.js";
+import type { ITask } from "./models/task-model.js";
+import { tasks, addTask, addSubtask, searchTasks, setTasks } from "./services/task-service.js";
+import { loadTasks, saveTasks } from "./services/storage-service.js";
+import { fetchTasksFromAPI } from "./services/api-service.js";
+import { renderTasks } from "./ui/ui-render.js";
+import { DOM } from "./ui/dom-elements.js";
 
 function clearForm() {
     if (DOM.titleInput) DOM.titleInput.value = "";

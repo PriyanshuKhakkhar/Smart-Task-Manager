@@ -1,4 +1,4 @@
-import { type ITask, Task, ImportantTask, type TaskConstructor } from "./task-model.js";
+import { type ITask, Task, ImportantTask, type TaskConstructor } from "../models/task-model.js";
 import { generateId } from "./task-service.js";
 
 export interface IApiTodo {

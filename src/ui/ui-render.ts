@@ -1,7 +1,7 @@
-import type { ITask, ISubTask } from "./task-model.js";
-import { tasks, removeTaskById, toggleTaskCompletion } from "./task-service.js";
-import { saveTasks } from "./storage-service.js";
-import { openSubtaskModal } from "./App.js";
+import type { ITask, ISubTask } from "../models/task-model.js";
+import { tasks, removeTaskById, toggleTaskCompletion } from "../services/task-service.js";
+import { saveTasks } from "../services/storage-service.js";
+import { openSubtaskModal } from "../App.js";
 import { DOM } from "./dom-elements.js";
 
 // Recursive helper to render nested subtasks
