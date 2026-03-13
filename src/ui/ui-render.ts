@@ -66,9 +66,11 @@ function attachTaskRowEvents(tr: HTMLTableRowElement, task: ITask): void {
     if (deleteBtn) {
         deleteBtn.addEventListener("click", (e: Event) => {
             e.stopPropagation();
-            removeTaskById(task.id);
-            saveTasks();
-            renderTasks();
+            if (confirm("Are you sure want to delete?")) {
+                removeTaskById(task.id);
+                saveTasks();
+                renderTasks();
+            }
         });
     }
 
@@ -127,11 +129,13 @@ function attachSubtaskRowEvents(subTr: HTMLTableRowElement): void {
         btn.addEventListener('click', (e: Event) => {
             e.stopPropagation();
             e.preventDefault();
-            const target = e.target as HTMLElement;
-            const stId = parseInt(target.getAttribute('data-id') || "0", 10);
-            removeTaskById(stId);
-            saveTasks();
-            renderTasks();
+            if (confirm("Are you sure want to delete?")) {
+                const target = e.target as HTMLElement;
+                const stId = parseInt(target.getAttribute('data-id') || "0", 10);
+                removeTaskById(stId);
+                saveTasks();
+                renderTasks();
+            }
         });
     });
 }

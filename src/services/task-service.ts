@@ -110,9 +110,18 @@ export function toggleTaskCompletion(id: number, isCompleted: boolean): void {
     }
 }
 
+function matchesSearch(node: ITask | ISubTask, text: string): boolean {
+    if (node.title.toLowerCase().includes(text)) return true;
+    if (node.description && node.description.toLowerCase().includes(text)) return true;
+    if (node.subtasks && node.subtasks.length > 0) {
+        return node.subtasks.some(st => matchesSearch(st, text));
+    }
+    return false;
+}
+
 export function searchTasks(searchText: string): ITask[] {
     const text = searchText.toLowerCase();
-    return tasks.filter(task => task.title.toLowerCase().includes(text));
+    return tasks.filter(task => matchesSearch(task, text));
 }
 
 // Reusable generic sorting function

@@ -223,7 +223,7 @@ subtaskRadioInputs.forEach(radio => {
 if (DOM.clearBtn)
     DOM.clearBtn.addEventListener("click", clearForm);
 if (DOM.searchInput)
-    DOM.searchInput.addEventListener("input", debounce(handleSearchTasks, 300));
+    DOM.searchInput.addEventListener("input", debounce(handleSearchTasks, 3000));
 if (DOM.taskList) {
     DOM.taskList.addEventListener("click", () => {
         throttleLog();
