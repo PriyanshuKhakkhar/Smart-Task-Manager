@@ -13,8 +13,12 @@ export const DOM = {
     
     // Main Form Errors
     titleError: document.getElementById("title-error"),
+    descError: document.getElementById("desc-error"),
     priorityError: document.getElementById("priority-error"),
     statusError: document.getElementById("status-error"),
+
+    taskStatusRadios: document.querySelectorAll<HTMLInputElement>('input[name="task-status"]'),
+    getCheckedTaskStatus: () => document.querySelector('input[name="task-status"]:checked') as HTMLInputElement | null,
 
     // Task List & Search
     taskList: document.getElementById("task-list") as HTMLTableSectionElement | null,
@@ -36,8 +40,12 @@ export const DOM = {
     
     // Subtask Errors
     subtaskTitleError: document.getElementById("subtask-title-error"),
+    subtaskDescError: document.getElementById("subtask-desc-error"),
     subtaskPriorityError: document.getElementById("subtask-priority-error"),
     subtaskStatusError: document.getElementById("subtask-status-error"),
+
+    subtaskStatusRadios: document.querySelectorAll<HTMLInputElement>('input[name="subtask-status"]'),
+    getCheckedSubtaskStatus: () => document.querySelector('input[name="subtask-status"]:checked') as HTMLInputElement | null,
 
     // Loading & Error Messages
     loadingMessage: document.getElementById("loading-message"),

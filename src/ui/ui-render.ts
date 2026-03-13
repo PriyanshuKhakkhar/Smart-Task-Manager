@@ -18,7 +18,7 @@ export function renderSubtasksHtml(subtasks: ISubTask[], depth: number = 0): str
                         <input type="checkbox" class="subtask-checkbox" data-id="${st.id}" ${st.isCompleted ? 'checked' : ''} style="margin-top: 2px; width: 16px; height: 16px; accent-color: #6366f1;">
                         <div>
                             <div style="font-weight: 500; font-size: 14px;">${st.title}</div>
-                            ${st.description ? `<div style="font-size: 13px; color: #6b7280; margin-top: 4px;">${st.description}</div>` : ''}
+                            ${st.description ? `<div style="font-size: 13px; color: #6b7280; margin-top: 4px;">${st.description}</div>` : '<div style="font-size: 13px; color: #6b7280; margin-top: 4px;">No description</div>'}
                         </div>
                     </label>
                     <div style="display: flex; gap: 16px; align-items: center; font-size: 13px;">
@@ -48,7 +48,7 @@ function createTaskRow(task: ITask): HTMLTableRowElement {
     tr.innerHTML = `
         <td style="font-weight: 600; color: #4b5563;">#${task.id}</td>
         <td style="${titleStyle}">${task.title}</td>
-        <td style="color: #6b7280;">${task.description || '-'}</td>
+        <td style="color: #6b7280;">${task.description || 'No description'}</td>
         <td><span class="badge priority-${task.priority ? task.priority.toLowerCase() : 'low'}">${task.priority || 'Low'}</span></td>
         <td><span class="badge status-${task.isCompleted ? 'completed' : 'pending'}">${task.isCompleted ? "Completed" : "Pending"}</span></td>
         <td style="color: #6b7280;">${task.createdAt || "N/A"}</td>

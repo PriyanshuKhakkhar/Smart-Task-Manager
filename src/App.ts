@@ -4,6 +4,8 @@ import { loadTasks, saveTasks } from "./services/storage-service.js";
 import { fetchTasksFromAPI } from "./services/api-service.js";
 import { renderTasks } from "./ui/ui-render.js";
 import { DOM } from "./ui/dom-elements.js";
+import { debounce } from "./utils/debounce.js";
+import { throttle } from "./utils/throttle.js";
 
 function clearForm() {
     if (DOM.titleInput) DOM.titleInput.value = "";
@@ -15,6 +17,7 @@ function clearForm() {
     if (DOM.completedRadio) DOM.completedRadio.checked = false;
 
     if (DOM.titleError) DOM.titleError.classList.add("d-none");
+    if (DOM.descError) DOM.descError.classList.add("d-none");
     if (DOM.priorityError) DOM.priorityError.classList.add("d-none");
     if (DOM.statusError) DOM.statusError.classList.add("d-none");
 }
@@ -27,6 +30,7 @@ function clearSubtaskForm(): void {
     if (DOM.subtaskCompletedRadio) DOM.subtaskCompletedRadio.checked = false;
     
     if (DOM.subtaskTitleError) DOM.subtaskTitleError.classList.add("d-none");
+    if (DOM.subtaskDescError) DOM.subtaskDescError.classList.add("d-none");
     if (DOM.subtaskPriorityError) DOM.subtaskPriorityError.classList.add("d-none");
     if (DOM.subtaskStatusError) DOM.subtaskStatusError.classList.add("d-none");
 }
@@ -43,17 +47,7 @@ function closeSubtaskModal() {
     DOM.subtaskModal.classList.remove("active");
 }
 
-function debounce<T extends (...args: unknown[]) => void>(fn: T, delay: number) {
-    let timer: ReturnType<typeof setTimeout>;
 
-    return function(this: unknown, ...args: Parameters<T>) {
-        clearTimeout(timer);
-
-        timer = setTimeout(() => {
-            fn.apply(this, args);
-        }, delay);
-    };
-}
 
 function handleSearchTasks(): void {
     if (!DOM.searchInput) return;
@@ -61,16 +55,7 @@ function handleSearchTasks(): void {
     renderTasks(filteredTasks);
 }
 
-function throttle<T extends (...args: unknown[]) => void>(fn: T, delay: number): (...args: Parameters<T>) => void {
-    let lastCall = 0;
-    return function(this: unknown, ...args: Parameters<T>) {
-        const now = Date.now();
-        if(now - lastCall >= delay) {
-            lastCall = now;
-            fn.apply(this, args);
-        }
-    }
-}
+
 
 function logTaskAction(): void {
     console.log("User interacting with Tasks...");
@@ -88,11 +73,22 @@ if (DOM.addBtn) {
         let isValid = true;
 
         if (!title) {
-            if (DOM.titleError) DOM.titleError.classList.remove("d-none");
+            if (DOM.titleError) {
+                DOM.titleError.textContent = "Task Title is required.";
+                DOM.titleError.classList.remove("d-none");
+            }
+            isValid = false;
+        } else if (/^\d+$/.test(title)) {
+            if (DOM.titleError) {
+                DOM.titleError.textContent = "Task title cannot contain only numbers";
+                DOM.titleError.classList.remove("d-none");
+            }
             isValid = false;
         } else {
             if (DOM.titleError) DOM.titleError.classList.add("d-none");
         }
+
+        if (DOM.descError) DOM.descError.classList.add("d-none");
 
         if (!priority) {
             if (DOM.priorityError) DOM.priorityError.classList.remove("d-none");
@@ -101,7 +97,7 @@ if (DOM.addBtn) {
             if (DOM.priorityError) DOM.priorityError.classList.add("d-none");
         }
 
-        const selectedStatus = document.querySelector('input[name="task-status"]:checked') as HTMLInputElement | null;
+        const selectedStatus = DOM.getCheckedTaskStatus();
         if (!selectedStatus) {
             if (DOM.statusError) DOM.statusError.classList.remove("d-none");
             isValid = false;
@@ -130,6 +126,14 @@ if (DOM.titleInput) {
     });
 }
 
+if (DOM.descInput) {
+    DOM.descInput.addEventListener("input", () => {
+        if (DOM.descError && DOM.descInput?.value.trim() !== "") {
+            DOM.descError.classList.add("d-none");
+        }
+    });
+}
+
 if (DOM.priorityInput) {
     DOM.priorityInput.addEventListener("change", () => {
         if (DOM.priorityError && DOM.priorityInput?.value !== "") {
@@ -138,8 +142,7 @@ if (DOM.priorityInput) {
     });
 }
 
-const radioInputs = document.querySelectorAll<HTMLInputElement>('input[name="task-status"]');
-radioInputs.forEach(radio => {
+DOM.taskStatusRadios.forEach(radio => {
     radio.addEventListener("change", () => {
         if (DOM.statusError) DOM.statusError.classList.add("d-none");
     });
@@ -153,16 +156,27 @@ if (DOM.addSubtaskBtn) {
         const title = DOM.subtaskTitleInput ? DOM.subtaskTitleInput.value.trim() : "";
         const description = DOM.subtaskDescInput ? DOM.subtaskDescInput.value.trim() : "";
         const priority = DOM.subtaskPriorityInput ? DOM.subtaskPriorityInput.value : "";
-        const selectedStatus = document.querySelector('input[name="subtask-status"]:checked') as HTMLInputElement | null;
+        const selectedStatus = DOM.getCheckedSubtaskStatus();
         
         let isValid = true;
 
         if (!title) {
-            if (DOM.subtaskTitleError) DOM.subtaskTitleError.classList.remove("d-none");
+            if (DOM.subtaskTitleError) {
+                DOM.subtaskTitleError.textContent = "Subtask Title is required.";
+                DOM.subtaskTitleError.classList.remove("d-none");
+            }
+            isValid = false;
+        } else if (/^\d+$/.test(title)) {
+            if (DOM.subtaskTitleError) {
+                DOM.subtaskTitleError.textContent = "Subtask title cannot contain only numbers";
+                DOM.subtaskTitleError.classList.remove("d-none");
+            }
             isValid = false;
         } else {
             if (DOM.subtaskTitleError) DOM.subtaskTitleError.classList.add("d-none");
         }
+
+        if (DOM.subtaskDescError) DOM.subtaskDescError.classList.add("d-none");
 
         if (!priority) {
             if (DOM.subtaskPriorityError) DOM.subtaskPriorityError.classList.remove("d-none");
@@ -202,6 +216,14 @@ if (DOM.subtaskTitleInput) {
     });
 }
 
+if (DOM.subtaskDescInput) {
+    DOM.subtaskDescInput.addEventListener("input", () => {
+        if (DOM.subtaskDescError && DOM.subtaskDescInput?.value.trim() !== "") {
+            DOM.subtaskDescError.classList.add("d-none");
+        }
+    });
+}
+
 if (DOM.subtaskPriorityInput) {
     DOM.subtaskPriorityInput.addEventListener("change", () => {
         if (DOM.subtaskPriorityError && DOM.subtaskPriorityInput?.value !== "") {
@@ -210,15 +232,14 @@ if (DOM.subtaskPriorityInput) {
     });
 }
 
-const subtaskRadioInputs = document.querySelectorAll<HTMLInputElement>('input[name="subtask-status"]');
-subtaskRadioInputs.forEach(radio => {
+DOM.subtaskStatusRadios.forEach(radio => {
     radio.addEventListener("change", () => {
         if (DOM.subtaskStatusError) DOM.subtaskStatusError.classList.add("d-none");
     });
 });
 
 if (DOM.clearBtn) DOM.clearBtn.addEventListener("click", clearForm);
-if (DOM.searchInput) DOM.searchInput.addEventListener("input", debounce(handleSearchTasks, 1000));
+if (DOM.searchInput) DOM.searchInput.addEventListener("input", debounce(handleSearchTasks, 300));
 
 if (DOM.taskList) {
     DOM.taskList.addEventListener("click", () => {
