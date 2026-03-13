@@ -1,5 +1,9 @@
 # Smart Task Manager
 
+![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue)
+![Status](https://img.shields.io/badge/status-active-success)
+![License](https://img.shields.io/badge/license-MIT-green)
+
 A lightweight **Task Management Web Application** built using **TypeScript, HTML, and CSS**.
 The application allows users to create, manage, and organize tasks with nested subtasks, priority levels, and status tracking.
 
@@ -8,6 +12,10 @@ This project was built as part of an **Industrial Internship assignment** to dem
 ## Project Preview
 
 [![Smart Task Manager UI](preview.png)](https://priyanshukhakkhar.github.io/Smart-Task-Manager/)
+
+## Live Demo
+
+[![Live Demo](https://img.shields.io/badge/Live-Demo-brightgreen)](https://priyanshukhakkhar.github.io/Smart-Task-Manager/)
 
 ---
 
@@ -185,6 +193,16 @@ The application allows users to:
 4. Mark tasks as completed
 5. Search and sort tasks
 6. Fetch tasks from API
+
+---
+
+## Future Improvements
+
+• Drag and drop task ordering  
+• Task due dates and reminders  
+• Dark mode support  
+• Task categories and filtering  
+• Backend integration for persistent storage
 
 ---
 
